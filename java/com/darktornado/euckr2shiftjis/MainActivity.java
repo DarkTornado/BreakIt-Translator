@@ -15,13 +15,11 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.json.JSONArray;
-import org.jsoup.Jsoup;
+import com.darktornado.library.SimpleRequester;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.net.URLConnection;
+import org.json.JSONArray;
+
+import java.net.URLEncoder;
 
 public class MainActivity extends Activity {
 
@@ -193,7 +191,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void run() {
                             output.setText(result);
-                            toast("뷁어를 한국어로 변역하였습니다.");
+                            toast("뷁어를 한국어로 번역하였습니다.");
                         }
                     });
                 }
@@ -214,7 +212,7 @@ public class MainActivity extends Activity {
                         @Override
                         public void run() {
                             output.setText(result);
-                            toast("한국어를 뷁어로 변역하였습니다.");
+                            toast("한국어를 뷁어로 번역하였습니다.");
                         }
                     });
                 } catch (Exception e) {
@@ -224,52 +222,29 @@ public class MainActivity extends Activity {
         }).start();
     }
 
-    public static String translate(String lang1, String lang2, String value) {
+    public String translate(String lang1, String lang2, String value) {
         try {
-            String result = Jsoup.connect("http://translate.googleapis.com/translate_a/single")
+            String result = SimpleRequester.create("https://translate.googleapis.com/translate_a/single")
+                    .method(SimpleRequester.METHOD_POST)
                     .data("client", "gtx")
                     .data("sl", lang1)
                     .data("tl", lang2)
                     .data("dt", "t")
+                    .data("q", URLEncoder.encode(value, "UTF-8"))
                     .data("q", value)
-                    .data("&ie", "UTF-8")
+                    .data("ie", "UTF-8")
                     .data("oe", "UTF-8")
-                    .ignoreHttpErrors(true).ignoreContentType(true).post().wholeText();
+                    .execute().getResponseBody();
             return new JSONArray(result).getJSONArray(0).getJSONArray(0).getString(0);
         } catch (Exception e) {
+//            return e.toString();
             return "번역 실패";
-            //toast(e.toString());
         }
         //return null;
     }
 
     private int dip2px(int dips) {
         return (int) Math.ceil(dips * this.getResources().getDisplayMetrics().density);
-    }
-
-
-    public static String getDataFromServer(String link, String encoding) {
-        try {
-            URL url = new URL(link);
-            URLConnection con = url.openConnection();
-            if (con != null) {
-                con.setConnectTimeout(5000);
-                con.setUseCaches(false);
-                InputStreamReader isr = new InputStreamReader(con.getInputStream(), encoding);
-                BufferedReader br = new BufferedReader(isr);
-                String str = br.readLine();
-                String line = "";
-                while ((line = br.readLine()) != null) {
-                    str += "\n" + line;
-                }
-                br.close();
-                isr.close();
-                return str;
-            }
-        } catch (Exception e) {
-            //toast(e.toString());
-        }
-        return null;
     }
 
 
